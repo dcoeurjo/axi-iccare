@@ -1,5 +1,11 @@
 import speech_recognition as sr
 from pyaxidraw import axidraw
+import argparse
+
+# Initialize the argument parser
+parser = argparse.ArgumentParser(description="Voice-controlled AxiDraw")
+parser.add_argument('--language', type=str, default='en-US', help='Language code for speech recognition (default: en-US)')
+args = parser.parse_args()
 
 # Initialize the recognizer and AxiDraw
 recognizer = sr.Recognizer()
@@ -27,9 +33,9 @@ def draw_square():
     ad.lineto(3, 3)
     ad.disconnect()
 
-def recognize_speech_and_draw():
+def recognize_speech_and_draw(language):
     """Listen through the microphone and control the AxiDraw based on speech."""
-    print("Listening for commands. Say something like 'draw a circle' or 'draw a square'...")
+    print(f"Listening for commands in {language}. Say something like 'draw a circle' or 'draw a square'...")
     with sr.Microphone() as source:
         try:
             # Listen to the audio
@@ -37,7 +43,7 @@ def recognize_speech_and_draw():
             audio = recognizer.listen(source)
             
             # Convert Speech to Text
-            command = recognizer.recognize_google(audio).lower()
+            command = recognizer.recognize_google(audio, language=language).lower()
             print(f"Heard: {command}")
             
             # Map commands to AxiDraw actions
@@ -56,5 +62,6 @@ def recognize_speech_and_draw():
             print(f"Error connecting to the recognition service: {e}")
 
 if __name__ == "__main__":
+    language = args.language
     while True:
-        recognize_speech_and_draw()
+        recognize_speech_and_draw(language)
