@@ -1,43 +1,60 @@
-# voice_control_axidraw.py
-
 import speech_recognition as sr
-import os
-import subprocess
+from pyaxidraw import axidraw
 
-# Function to execute AxiDraw commands
-
-def execute_axidraw(command):
-    try:
-        subprocess.run(command, check=True)
-    except subprocess.CalledProcessError as e:
-        print(f"Error executing command: {e}")
-
-# Initialize recognizer
+# Initialize the recognizer and AxiDraw
 recognizer = sr.Recognizer()
+ad = axidraw.AxiDraw()
 
-# Define AxiDraw command
-axidraw_command = ["axidraw_command_here"]  # Replace with actual AxiDraw command
+def setup_axidraw():
+    """Setup and connect to AxiDraw."""
+    ad.interactive()
+    ad.connect()
 
-# Main loop
-while True:
+def draw_circle():
+    """Example function to draw a circle using AxiDraw."""
+    setup_axidraw()
+    ad.moveto(5, 5)  # Move to starting position
+    ad.circle(2)     # Draw a circle with radius 2
+    ad.disconnect()
+
+def draw_square():
+    """Example function to draw a square using AxiDraw."""
+    setup_axidraw()
+    ad.moveto(3, 3)  # Move to starting position
+    ad.lineto(3, 6)  # Draw square sides
+    ad.lineto(6, 6)
+    ad.lineto(6, 3)
+    ad.lineto(3, 3)
+    ad.disconnect()
+
+def recognize_speech_and_draw():
+    """Listen through the microphone and control the AxiDraw based on speech."""
+    print("Listening for commands. Say something like 'draw a circle' or 'draw a square'...")
     with sr.Microphone() as source:
-        print("Listening...")
-        audio = recognizer.listen(source)
-
         try:
-            # Recognize speech
-            command = recognizer.recognize_google(audio)
-            print(f"You said: {command}")
-
-            # Check for exit command
-            if "stop" in command:
-                print("Exiting.")
-                break
-
-            # Execute AxiDraw command
-            execute_axidraw(axidraw_command)
+            # Listen to the audio
+            recognizer.adjust_for_ambient_noise(source)
+            audio = recognizer.listen(source)
+            
+            # Convert Speech to Text
+            command = recognizer.recognize_google(audio).lower()
+            print(f"Heard: {command}")
+            
+            # Map commands to AxiDraw actions
+            if "circle" in command:
+                draw_circle()
+                print("Done drawing a circle!")
+            elif "square" in command:
+                draw_square()
+                print("Done drawing a square!")
+            else:
+                print("Command not recognized. Please try again!")
 
         except sr.UnknownValueError:
-            print("Could not understand audio")
+            print("Could not understand the audio. Please try again.")
         except sr.RequestError as e:
-            print(f"Could not request results from Google Speech Recognition service; {e}")
+            print(f"Error connecting to the recognition service: {e}")
+
+if __name__ == "__main__":
+    while True:
+        recognize_speech_and_draw()
